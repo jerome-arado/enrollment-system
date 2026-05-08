@@ -26,33 +26,29 @@ class Enrollment extends Model
         'birthdate' => 'date',
     ];
 
+    // ── Relationships ─────────────────────────────────────────
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function isPending(): bool
+    public function documents()
     {
-        return $this->status === 'pending';
+        return $this->hasMany(EnrollmentDocument::class)->latest();
     }
 
-    public function isEnrolled(): bool
-    {
-        return $this->status === 'enrolled';
-    }
-
-    public function isDisapproved(): bool
-    {
-        return $this->status === 'disapproved';
-    }
+    // ── Status helpers ────────────────────────────────────────
+    public function isPending(): bool    { return $this->status === 'pending'; }
+    public function isEnrolled(): bool   { return $this->status === 'enrolled'; }
+    public function isDisapproved(): bool{ return $this->status === 'disapproved'; }
 
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            'pending'      => 'Pending Review',
-            'enrolled'     => 'Enrolled',
-            'disapproved'  => 'Disapproved',
-            default        => 'Unknown',
+            'pending'     => 'Pending Review',
+            'enrolled'    => 'Enrolled',
+            'disapproved' => 'Disapproved',
+            default       => 'Unknown',
         };
     }
 
@@ -61,6 +57,17 @@ class Enrollment extends Model
         if ($this->profile_picture) {
             return asset('storage/' . $this->profile_picture);
         }
-        return asset('images/default-avatar.png');
+        return '';
+    }
+
+    // ── Document helpers ──────────────────────────────────────
+    public function hasDocument(string $label): bool
+    {
+        return $this->documents()->where('label', $label)->exists();
+    }
+
+    public function getDocumentCount(): int
+    {
+        return $this->documents()->count();
     }
 }

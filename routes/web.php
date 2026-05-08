@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DocumentController;
 use Illuminate\Support\Facades\Route;
 
 // ── Public ─────────────────────────────────────────────────────
@@ -31,10 +32,13 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/profile',          [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/password', [ProfileController::class, 'changePasswordForm'])->name('profile.password');
     Route::put('/profile/password', [ProfileController::class, 'changePassword'])->name('profile.password.update');
-    Route::post('/profile/picture',         [ProfileController::class, 'updatePicture'])->name('profile.picture.update');
-    Route::delete('/profile/picture',       [ProfileController::class, 'removePicture'])->name('profile.picture.remove');
+    Route::post('/profile/picture',     [ProfileController::class, 'updatePicture'])->name('profile.picture.update');
+    Route::delete('/profile/picture',   [ProfileController::class, 'removePicture'])->name('profile.picture.remove');
 
-    // ── Student ─────────────────────────────────────────────────
+    // ── Shared Document Download ────────────────────────────────
+    Route::get('/documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
+
+    // ── Student Routes ─────────────────────────────────────────
     Route::middleware(['auth', 'student'])->prefix('student')->name('student.')->group(function () {
         Route::get('/dashboard',   [EnrollmentController::class, 'dashboard'])->name('dashboard');
         Route::get('/enroll',      [EnrollmentController::class, 'create'])->name('enroll');
@@ -44,12 +48,18 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/enroll',   [EnrollmentController::class, 'destroy'])->name('enroll.destroy');
     });
 
-    // ── Admin ───────────────────────────────────────────────────
+    // ── Admin Routes ───────────────────────────────────────────
     Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+        // Dashboard & Enrollment Management
         Route::get('/dashboard',                      [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/students',                       [AdminController::class, 'students'])->name('students');
+        Route::get('/students/{user}',                [AdminController::class, 'showStudent'])->name('students.show');
+        Route::delete('/students/{user}',             [AdminController::class, 'destroyStudent'])->name('students.destroy');
         Route::get('/enrollments/{enrollment}',       [AdminController::class, 'show'])->name('enrollment.show');
         Route::put('/enrollments/{enrollment}/status',[AdminController::class, 'updateStatus'])->name('enrollment.status');
         Route::delete('/enrollments/{enrollment}',    [AdminController::class, 'destroy'])->name('enrollment.destroy');
+
+        // Document Status Update (admin only)
+        Route::put('/documents/{document}/status', [DocumentController::class, 'updateStatus'])->name('document.status');
     });
 });

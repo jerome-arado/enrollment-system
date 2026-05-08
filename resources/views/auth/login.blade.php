@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="auth-card">
-    <h2>Welcome back</h2>
+    <h2>Login your account</h2>
 
     @if(session('success'))
         <div class="flash flash-success">{{ session('success') }}</div>

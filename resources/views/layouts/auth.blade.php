@@ -176,10 +176,10 @@
     <div class="auth-container">
         <div class="auth-brand">
             <a href="{{ route('login') }}" class="logo">
-                <div class="logo-mark"></div>
+                
                 <h1>Enrollment System</h1>
             </a>
-            <p>Academic Year 2024 – 2025</p>
+            <p>Academic Year 2026 – 2027</p>
         </div>
         @yield('content')
     </div>

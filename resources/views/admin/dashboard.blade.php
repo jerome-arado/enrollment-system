@@ -52,19 +52,6 @@
             </div>
         </div>
 
-        {{-- Status dropdown (auto‑submit) --}}
-        <div class="form-group">
-            <label>Status</label>
-            <select name="status" id="statusSelect">
-                <option value="">All Statuses</option>
-                @foreach(['pending', 'enrolled', 'disapproved'] as $s)
-                    <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
-                        {{ ucfirst($s) }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
         {{-- Course dropdown (auto‑submit) --}}
         <div class="form-group">
             <label>Course</label>
@@ -139,7 +126,7 @@
                 @empty
                     <tr>
                         <td colspan="6" style="text-align:center; padding:2.5rem; color:var(--stone);">
-                            No enrollments found.
+                            No pending enrollments found.
                         </td>
                     </tr>
                 @endforelse

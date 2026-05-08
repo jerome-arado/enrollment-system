@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Enrollment — ' . $enrollment->name)
 
+
 @section('content')
 <div class="page-narrow">
     <div class="section-header">
@@ -105,6 +106,9 @@
             </div>
         </form>
     </div>
+
+    {{-- Documents --}}
+@include('admin.partials.documents', ['enrollment' => $enrollment->load('documents')])
 
     {{-- Danger zone --}}
     <div class="card mt-3" style="border: 1px solid rgba(184,84,80,0.25);">

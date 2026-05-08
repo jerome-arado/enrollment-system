@@ -391,56 +391,62 @@
                    class="{{ request()->routeIs('admin.students') ? 'active' : '' }}">Students</a></li>
         @else
             <li><a href="{{ route('student.dashboard') }}"
-                   class="{{ request()->routeIs('student.dashboard') ? 'active' : '' }}">My Enrollment</a></li>
+                class="{{ request()->routeIs('student.dashboard') ? 'active' : '' }}">My Enrollment</a></li>
         @endif
     </ul>
 
     {{-- Profile Dropdown --}}
     <div class="profile-menu" id="profileMenu">
+        @php
+            $user = auth()->user();
+            $profilePic = null;
+            if ($user->isAdmin()) {
+                $profilePic = $user->profile_picture;
+            } else {
+                // For students, use enrollment profile picture if exists
+                $profilePic = $user->enrollment?->profile_picture;
+            }
+            $initials = collect(explode(' ', $user->name))
+                ->map(fn($w) => strtoupper(substr($w, 0, 1)))
+                ->take(2)->implode('');
+        @endphp
+
         <button class="profile-trigger" onclick="toggleDropdown()" type="button" aria-haspopup="true" aria-expanded="false">
             <div class="profile-avatar">
-                @php
-                    $initials = collect(explode(' ', auth()->user()->name))
-                        ->map(fn($w) => strtoupper(substr($w, 0, 1)))
-                        ->take(2)->implode('');
-                    $navPic = auth()->user()->load('enrollment')->enrollment?->profile_picture;
-                @endphp
-                @if($navPic)
-                    <img src="{{ asset('storage/' . $navPic) }}?v={{ filemtime(storage_path('app/public/' . $navPic)) }}"
-                        alt="avatar"
-                        style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                @if($profilePic && Storage::disk('public')->exists($profilePic))
+                    <img src="{{ asset('storage/' . $profilePic) }}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                 @else
                     {{ $initials }}
                 @endif
             </div>
-            <span class="profile-name">{{ auth()->user()->name }}</span>
+            <span class="profile-name">{{ $user->name }}</span>
             <span class="profile-caret"></span>
         </button>
 
         <div class="profile-dropdown" role="menu">
             <div class="dropdown-header">
-                <div class="d-name">{{ auth()->user()->name }}</div>
-                <div class="d-email">{{ auth()->user()->email }}</div>
-                <span class="d-role">{{ auth()->user()->role }}</span>
+                <div class="d-name">{{ $user->name }}</div>
+                <div class="d-email">{{ $user->email }}</div>
+                <span class="d-role">{{ $user->role }}</span>
             </div>
             <div class="dropdown-body">
                 <a href="{{ route('profile.edit') }}" class="dropdown-item" role="menuitem">
-                    <span class="icon"></span> Edit Profile
+                    <span class="icon">👤</span> Edit Profile
                 </a>
                 <a href="{{ route('profile.password') }}" class="dropdown-item" role="menuitem">
-                    <span class="icon"></span> Change Password
+                    <span class="icon">🔒</span> Change Password
                 </a>
                 <div class="dropdown-divider"></div>
-                @if(auth()->user()->isAdmin())
+                @if($user->isAdmin())
                     <a href="{{ route('admin.dashboard') }}" class="dropdown-item" role="menuitem">
-                        <span class="icon"></span> Admin Panel
+                        <span class="icon">📊</span> Admin Panel
                     </a>
                     <div class="dropdown-divider"></div>
                 @endif
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
                     <button type="submit" class="dropdown-item danger" role="menuitem">
-                        <span class="icon"></span> Sign Out
+                        <span class="icon">🚪</span> Sign Out
                     </button>
                 </form>
             </div>

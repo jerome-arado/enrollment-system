@@ -32,7 +32,7 @@
                     </label>
                     <input type="file" name="profile_picture" id="profile_picture"
                            accept="image/jpeg,image/jpg,image/png,image/webp"
-                           onchange="updateFileName(this)">
+                           onchange="updateFileName(this, 'file-label')">
                 </div>
                 @error('profile_picture') <p class="field-error">{{ $message }}</p> @enderror
             </div>
@@ -89,6 +89,66 @@
 
             <div class="divider"></div>
 
+            {{-- ========== DOCUMENTS SECTION (ADD THIS) ========== --}}
+            <h3 style="font-family:var(--font); font-size:1rem; margin:0 0 1rem; color:var(--bark);">📄 Required Documents</h3>
+
+            @php
+                $docMapping = [
+                    'form137'    => 'Form 137 / SF9',
+                    'birth_cert' => 'Birth Certificate (PSA)',
+                    'good_moral' => 'Good Moral Certificate',
+                    'medical'    => 'Medical Certificate',
+                    'id_picture' => '2x2 ID Picture',
+                ];
+            @endphp
+
+            @foreach($docMapping as $field => $label)
+                @php
+                    $existingDoc = $enrollment->documents->firstWhere('label', $label);
+                @endphp
+                <div class="form-group">
+                    <label>{{ $label }}</label>
+                    @if($existingDoc)
+                        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+                            <span style="font-size:0.9rem;">{{ $existingDoc->icon }} {{ $existingDoc->original_name }}</span>
+                            <span class="badge badge-doc-{{ $existingDoc->status }}" style="font-size:0.7rem;">
+                                {{ $existingDoc->status_label }}
+                            </span>
+                            <a href="{{ route('documents.download', $existingDoc) }}" class="btn btn-outline btn-sm">
+                                ⬇ Download
+                            </a>
+                            @if($existingDoc->status !== 'approved')
+                                <form action="{{ route('student.documents.destroy', $existingDoc) }}" method="POST"
+                                      onsubmit="return confirm('Remove this document?')" style="display:inline;">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-danger btn-sm" title="Remove">🗑</button>
+                                </form>
+                            @endif
+                        </div>
+                        <div class="file-input-wrap">
+                            <label class="file-label" id="label-{{ $field }}">
+                                📁 Replace with a new file (optional)
+                            </label>
+                            <input type="file" name="{{ $field }}" id="{{ $field }}"
+                                   accept="@if($field === 'id_picture') image/jpeg,image/jpg,image/png,image/webp @else .pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document @endif"
+                                   onchange="updateFileName(this, 'label-{{ $field }}')">
+                        </div>
+                    @else
+                        <div class="file-input-wrap">
+                            <label class="file-label" id="label-{{ $field }}">
+                                📁 Upload (required)
+                            </label>
+                            <input type="file" name="{{ $field }}" id="{{ $field }}"
+                                   accept="@if($field === 'id_picture') image/jpeg,image/jpg,image/png,image/webp @else .pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document @endif"
+                                   onchange="updateFileName(this, 'label-{{ $field }}')">
+                        </div>
+                        @error($field) <p class="field-error">{{ $message }}</p> @enderror
+                    @endif
+                </div>
+            @endforeach
+
+            <div class="divider"></div>
+
             <div class="flex gap-1">
                 <button type="submit" class="btn btn-primary">💾 Save Changes</button>
                 <a href="{{ route('student.dashboard') }}" class="btn btn-outline">Cancel</a>
@@ -98,9 +158,25 @@
 </div>
 
 <script>
-function updateFileName(input) {
-    const label = document.getElementById('file-label');
-    label.textContent = input.files[0] ? '✅ ' + input.files[0].name : '📷 Replace photo';
+function updateFileName(input, labelId) {
+    const label = document.getElementById(labelId);
+    if (input.files && input.files[0]) {
+        label.textContent = '✅ ' + input.files[0].name;
+    } else {
+        if (labelId === 'file-label') {
+            label.textContent = '📷 Replace photo (leave blank to keep current)';
+        } else if (labelId.includes('id_picture')) {
+            label.textContent = '🖼️ Choose image';
+        } else {
+            label.textContent = '📁 Choose file';
+        }
+    }
 }
 </script>
+
+<style>
+    .badge-doc-pending  { background: var(--warn-pale);    color: var(--warn);    }
+    .badge-doc-approved { background: var(--success-pale); color: var(--success); }
+    .badge-doc-rejected { background: var(--error-pale);   color: var(--error);   }
+</style>
 @endsection
